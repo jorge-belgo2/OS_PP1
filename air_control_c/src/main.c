@@ -1,3 +1,4 @@
+#define _POSIX_C_SOURCE 200809L
 #include "functions.h"
 #include <ctype.h>
 #include <fcntl.h>
@@ -10,8 +11,6 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-#define SH_MEMORY_NAME "Shared_Memory_Segment"
-#define SHM_SIZE sizeof(int) * 3
 
 int main() {
   // TODO 1: Call the function that creates the shared memory segment.
@@ -37,22 +36,26 @@ int main() {
 
     execl("radio", "radio", SH_MEMORY_NAME, NULL);
     return EXIT_SUCCESS;
+  } else {
+
+    // TODO 6: Launch 5 threads which will be the controllers; each thread will
+    // execute the TakeOffsFunction().
+
+    pthread_t threads[5];
+
+    for (int i = 0; i < 5; i++) {
+      pthread_create(&threads[i], NULL, TakeOffsFunction, NULL);
+    }
+
+    for (int i = 0; i < 5; i++) {
+      pthread_join(threads[i], NULL);
+    }
+    kill(radioPid, SIGTERM);
+    pthread_mutex_destroy(&state_lock);
+    pthread_mutex_destroy(&runway1_lock);
+    pthread_mutex_destroy(&runway2_lock);
+    shm_unlink(SH_MEMORY_NAME);
   }
-
-  // TODO 6: Launch 5 threads which will be the controllers; each thread will
-  // execute the TakeOffsFunction().
-
-  pthread_t threads[5];
-
-  for (int i = 0; i < 5; i++) {
-    pthread_create(&threads[i], NULL, TakeOffsFunction(), NULL);
-  }
-
-  for (int i = 0; i < 5; i++) {
-    pthread_join(threads[i], NULL);
-  }
-  kill(radioPid, SIGTERM);
-  shm_unlink(SH_MEMORY_NAME);
 
   return EXIT_SUCCESS;
 }

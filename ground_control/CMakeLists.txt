@@ -5,7 +5,8 @@ project(ground)
 set(CMAKE_C_STANDARD 11)
 
 add_executable(${CMAKE_PROJECT_NAME}
-   src/main.c)
+   src/main.c
+   src/functions.c)
 
 target_link_libraries(${CMAKE_PROJECT_NAME}
    m)
