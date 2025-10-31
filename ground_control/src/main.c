@@ -12,14 +12,15 @@
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
-
-#define SHM_SIZE sizeof(int) * 3
+#define SH_MEMORY_NAME "Shared_Memory_Segment"
+#define SHM_SIZE sizeof(pid_t) * 3
 #define PLANES_LIMIT 20
 int planes = 0;
 int takeoffs = 0;
 int traffic = 0;
-int fd = 0;
+int fd;
 int *shm_ptr;
+char shm_name[22];
 
 void Traffic(int signum) {
   // TODO:
@@ -31,21 +32,26 @@ void Traffic(int signum) {
     printf("RUNWAY OVERLOADED\n");
   } else if (planes < PLANES_LIMIT) {
     planes += 5;
-    kill(shm_ptr[1], SIGUSR2);
+    if(shm_ptr[1] > 0){
+      kill(shm_ptr[1], SIGUSR2);
+    }
   }
 }
 
 void signal_handler(int signal) {
   if (signal == SIGTERM) {
-    if (fd != 0) {
-      munmap(shm_ptr, SHM_SIZE);  // Unmap shared memory first
-      close(fd);
-      printf("finalization of operations...\n");
-      exit(0);  // Exit cleanly instead of using SIGKILL
-    }
+
+    munmap(shm_ptr, SHM_SIZE); // Unmap shared memory first
+    close(fd);
+    printf("finalization of operations...\n");
+    exit(0); // Exit cleanly instead of using SIGKILL
+
   } else if (signal == SIGUSR1) {
+    planes -= 5;
     takeoffs += 5;
-  } else {
+  } else if(signal == SIGALRM) {
+    Traffic(signal);
+  }else {
     printf("Neither sigterm nor sigusr1 was sent\n");
   }
 }
@@ -56,18 +62,18 @@ int main(int argc, char *argv[]) {
   // TODO:
   // 1. Open the shared memory block and store this process PID in position 2
   //    of the memory block.
-  int fd = shm_open(argv[1], O_RDWR, 0666);
+  if (argc >= 2 && argv[1] && argv[1][0] != '\0') {
+    strcpy(shm_name, SH_MEMORY_NAME);
+  } else {
+    strcpy(shm_name, SH_MEMORY_NAME);
+  }
+
+  fd = shm_open(shm_name, O_RDWR, 0);
   if (fd == -1) {
     perror("shm_open failed");
     return 1;
   }
-  
-  if (ftruncate(fd, SHM_SIZE) == -1) {
-    perror("ftruncate failed");
-    close(fd);
-    return 1;
-  }
-  
+
   shm_ptr = mmap(0, SHM_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
   if (shm_ptr == MAP_FAILED) {
     perror("mmap failed");
@@ -84,22 +90,16 @@ int main(int argc, char *argv[]) {
   sa.sa_handler = signal_handler;
   sigaction(SIGTERM, &sa, NULL);
   sigaction(SIGUSR1, &sa, NULL);
+  sigaction(SIGALRM, &sa, NULL);
 
   // 2. Configure the timer to execute the Traffic function.
 
-  struct sigaction sa_timer;
   struct itimerval timer;
 
-  // 1️⃣ Configure the signal handler for SIGALRM
-  sa_timer.sa_handler = &timer_handler; // function to call when timer fires
-  // sa_timer.sa_flags = SA_RESTART;      // restart syscalls if interrupted
-  sigaction(SIGALRM, &sa_timer, NULL); // register handler
-
-  // 2️⃣ Configure timer to trigger every 500ms
-  timer.it_value.tv_sec = 0;          // first trigger delay (seconds)
-  timer.it_value.tv_usec = 500000;    // first trigger delay (microseconds)
-  timer.it_interval.tv_sec = 0;       // interval seconds between triggers
-  timer.it_interval.tv_usec = 500000; // interval microseconds (500ms)
+  timer.it_value.tv_sec = 0;
+  timer.it_value.tv_usec = 500000;
+  timer.it_interval.tv_sec = 0;
+  timer.it_interval.tv_usec = 500000;
 
   setitimer(ITIMER_REAL, &timer, NULL);
 

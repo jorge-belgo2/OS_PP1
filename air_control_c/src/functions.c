@@ -1,3 +1,4 @@
+#include "functions.h"
 #include <fcntl.h>
 #include <pthread.h>
 #include <signal.h>
@@ -8,47 +9,50 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include "functions.h"
 
-// ✅ Define them here (ONE definition)
+#define TOTAL_TAKEOFFS 20
 int planes = 0;
 int takeoffs = 0;
-int total_takeoffs = 20;
+int total_takeoffs = 0;
 
 pthread_mutex_t state_lock;
 pthread_mutex_t runway1_lock;
 pthread_mutex_t runway2_lock;
 
+int *shm_ptr;
+int fd;
 
 void MemoryCreate() {
-    shm_unlink(SH_MEMORY_NAME);
-    int fd = shm_open(SH_MEMORY_NAME, O_CREAT | O_RDWR, 0666);
-    if (fd == -1) {
-        perror("shm_open failed");
-        exit(EXIT_FAILURE);
-    }
+  shm_unlink(SH_MEMORY_NAME);
+  fd = shm_open(SH_MEMORY_NAME, O_CREAT | O_RDWR, 0666);
+  if (fd == -1) {
+    perror("shm_open failed");
+    exit(EXIT_FAILURE);
+  }
 
-    if (ftruncate(fd, SHM_SIZE) == -1) {
-        perror("ftruncate failed");
-        close(fd);
-        exit(EXIT_FAILURE);
-    }
-
-    int *shm_ptr = mmap(0, SHM_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-    if (shm_ptr == MAP_FAILED) {
-        perror("mmap failed");
-        close(fd);
-        exit(EXIT_FAILURE);
-    }
-
-    shm_ptr[0] = getpid(); // ✅ safe now
+  if (ftruncate(fd, SHM_SIZE) == -1) {
+    perror("ftruncate failed");
     close(fd);
+    exit(EXIT_FAILURE);
+  }
 
-    pthread_mutex_init(&state_lock, NULL);
-    pthread_mutex_init(&runway1_lock, NULL);
-    pthread_mutex_init(&runway2_lock, NULL);
+  shm_ptr = mmap(0, SHM_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+  if (shm_ptr == MAP_FAILED) {
+    perror("mmap failed");
+    close(fd);
+    exit(EXIT_FAILURE);
+  }
+
+  shm_ptr[0] = getpid();
+
+  // pthread_mutex_init(&state_lock, NULL);
+  // pthread_mutex_init(&runway1_lock, NULL);
+  // pthread_mutex_init(&runway2_lock, NULL);
+
+  if (pthread_mutex_init(&state_lock, NULL) == 0 && pthread_mutex_init(&runway1_lock, NULL) == 0 && pthread_mutex_init(&runway2_lock, NULL) == 0) {
+    printf("Mutexes created successfully\n");
+  }
 }
-
 
 void SigHandler2(int signal) { planes += 5; }
 
@@ -62,23 +66,32 @@ void *TakeOffsFunction() {
   //    Send SIGUSR1 every 5 local takeoffs
   //    Send SIGTERM when the total takeoffs target is reached
 
-  while (takeoffs < total_takeoffs) {
-    if (pthread_mutex_trylock(&runway1_lock) == 0 && pthread_mutex_trylock(&state_lock) == 0 && planes > 0) {
+  while (takeoffs < TOTAL_TAKEOFFS) {
+    if (pthread_mutex_trylock(&runway1_lock) == 0 &&
+        pthread_mutex_trylock(&state_lock) == 0 && planes > 0) {
 
-      
       planes -= 1;
       takeoffs++;
       total_takeoffs++;
+      if (takeoffs == 5) {
+        kill(shm_ptr[1], SIGUSR1);
+        takeoffs = 0;
+      }
       pthread_mutex_unlock(&state_lock);
       sleep(1);
       pthread_mutex_unlock(&runway1_lock);
 
-    } else if (pthread_mutex_trylock(&runway2_lock) == 0 && pthread_mutex_trylock(&state_lock) == 0 && planes > 0) {
+    } else if (pthread_mutex_trylock(&runway2_lock) == 0 &&
+               pthread_mutex_trylock(&state_lock) == 0 && planes > 0) {
 
-      pthread_mutex_lock(&state_lock);
       planes -= 1;
       takeoffs++;
       total_takeoffs++;
+      if (takeoffs == 5) {
+        kill(shm_ptr[1], SIGUSR1);
+        takeoffs = 0;
+      }
+
       pthread_mutex_unlock(&state_lock);
       sleep(1);
       pthread_mutex_unlock(&runway2_lock);
@@ -87,5 +100,7 @@ void *TakeOffsFunction() {
       usleep(1000);
     }
   }
+  kill(shm_ptr[1], SIGTERM);
+  close(fd);
   return EXIT_SUCCESS;
 }

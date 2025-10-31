@@ -29,17 +29,23 @@ int main() {
 
   if (radioPid == 0) {
 
+    
     int fd = shm_open(SH_MEMORY_NAME, O_RDWR, 0666);
-    ftruncate(fd, SHM_SIZE);
-    int *shm_ptr = mmap(0, SHM_SIZE, PROT_READ, MAP_SHARED, fd, 0);
+    if (fd == -1) {
+      perror("shm_open failed");
+      exit(EXIT_FAILURE);
+    }
+
+    int *shm_ptr = mmap(0, SHM_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     shm_ptr[1] = getpid();
 
-    execl("radio", "radio", SH_MEMORY_NAME, NULL);
-    return EXIT_SUCCESS;
+    execl("./radio", "radio", SH_MEMORY_NAME, NULL);
+    perror("execl failed");
+    exit(EXIT_FAILURE);
   } else {
 
     // TODO 6: Launch 5 threads which will be the controllers; each thread will
-    // execute the TakeOffsFunction().
+    // execute the TakeOffsFunction()
 
     pthread_t threads[5];
 
@@ -50,7 +56,6 @@ int main() {
     for (int i = 0; i < 5; i++) {
       pthread_join(threads[i], NULL);
     }
-    kill(radioPid, SIGTERM);
     pthread_mutex_destroy(&state_lock);
     pthread_mutex_destroy(&runway1_lock);
     pthread_mutex_destroy(&runway2_lock);

@@ -7,8 +7,10 @@
 extern int planes;
 extern int takeoffs;
 extern int total_takeoffs;
+extern int fd;
 
 extern pthread_t threads[5];
+extern int *shm_ptr;
 
 extern pthread_mutex_t state_lock, runway1_lock, runway2_lock;
 void MemoryCreate();
