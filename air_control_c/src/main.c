@@ -28,8 +28,6 @@ int main() {
   radioPid = fork();
 
   if (radioPid == 0) {
-
-    
     int fd = shm_open(SH_MEMORY_NAME, O_RDWR, 0666);
     if (fd == -1) {
       perror("shm_open failed");
@@ -56,9 +54,9 @@ int main() {
     for (int i = 0; i < 5; i++) {
       pthread_join(threads[i], NULL);
     }
-    pthread_mutex_destroy(&state_lock);
-    pthread_mutex_destroy(&runway1_lock);
-    pthread_mutex_destroy(&runway2_lock);
+    // pthread_mutex_destroy(&state_lock);
+    // pthread_mutex_destroy(&runway1_lock);
+    // pthread_mutex_destroy(&runway2_lock);
     shm_unlink(SH_MEMORY_NAME);
   }
 

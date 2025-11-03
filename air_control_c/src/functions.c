@@ -45,13 +45,13 @@ void MemoryCreate() {
 
   shm_ptr[0] = getpid();
 
-  // pthread_mutex_init(&state_lock, NULL);
-  // pthread_mutex_init(&runway1_lock, NULL);
-  // pthread_mutex_init(&runway2_lock, NULL);
+  pthread_mutex_init(&state_lock, NULL);
+  pthread_mutex_init(&runway1_lock, NULL);
+  pthread_mutex_init(&runway2_lock, NULL);
 
-  if (pthread_mutex_init(&state_lock, NULL) == 0 && pthread_mutex_init(&runway1_lock, NULL) == 0 && pthread_mutex_init(&runway2_lock, NULL) == 0) {
-    printf("Mutexes created successfully\n");
-  }
+  // if (pthread_mutex_init(&state_lock, NULL) == 0 && pthread_mutex_init(&runway1_lock, NULL) == 0 && pthread_mutex_init(&runway2_lock, NULL) == 0) {
+  //   printf("Mutexes created successfully\n");
+  // }
 }
 
 void SigHandler2(int signal) { planes += 5; }
@@ -67,29 +67,29 @@ void *TakeOffsFunction() {
   //    Send SIGTERM when the total takeoffs target is reached
 
   while (takeoffs < TOTAL_TAKEOFFS) {
-    if (pthread_mutex_trylock(&runway1_lock) == 0 &&
-        pthread_mutex_trylock(&state_lock) == 0 && planes > 0) {
-
+    if (pthread_mutex_trylock(&runway1_lock) == 0 && planes > 0) {
+      
+      pthread_mutex_lock(&state_lock);
       planes -= 1;
       takeoffs++;
       total_takeoffs++;
       if (takeoffs == 5) {
-        kill(shm_ptr[1], SIGUSR1);
         takeoffs = 0;
+        kill(shm_ptr[1], SIGUSR1);
       }
       pthread_mutex_unlock(&state_lock);
       sleep(1);
       pthread_mutex_unlock(&runway1_lock);
 
-    } else if (pthread_mutex_trylock(&runway2_lock) == 0 &&
-               pthread_mutex_trylock(&state_lock) == 0 && planes > 0) {
-
+    } else if (pthread_mutex_trylock(&runway2_lock) == 0 && planes > 0) {
+      
+      pthread_mutex_lock(&state_lock);
       planes -= 1;
       takeoffs++;
       total_takeoffs++;
       if (takeoffs == 5) {
-        kill(shm_ptr[1], SIGUSR1);
         takeoffs = 0;
+        kill(shm_ptr[1], SIGUSR1);
       }
 
       pthread_mutex_unlock(&state_lock);
