@@ -1,10 +1,20 @@
-radio pid: 60397
+radio pid: 10154
 Planes: 5
 Planes: 10
 RUNWAY OVERLOADED!!!! 
+Takeoff clearance 5
+Planes: 15
+RUNWAY OVERLOADED!!!! 
+Takeoff clearance 10
+Planes: 20
+RUNWAY OVERLOADED!!!! 
+Takeoff clearance 15
+Planes: 25
+RUNWAY OVERLOADED!!!! 
+Takeoff clearance 20
 :::: End of operations ::::
-Takeoffs: 0 Planes: 10
-air pid: 60395
-radio pid: 60397
-ground pid: 60396
+Takeoffs: 20 Planes: 25
+air pid: 10151
+radio pid: 10154
+ground pid: 10152
 :::::::::::::::::::::::::::

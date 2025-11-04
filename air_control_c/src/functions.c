@@ -65,9 +65,8 @@ void *TakeOffsFunction() {
   //    Simulate the time a takeoff takes with sleep(1)
   //    Send SIGUSR1 every 5 local takeoffs
   //    Send SIGTERM when the total takeoffs target is reached
-
-  while (takeoffs < TOTAL_TAKEOFFS) {
-    if (pthread_mutex_trylock(&runway1_lock) == 0 && planes > 0) {
+  while (total_takeoffs < TOTAL_TAKEOFFS) {
+    if (pthread_mutex_trylock(&runway1_lock) == 0) {
       
       pthread_mutex_lock(&state_lock);
       planes -= 1;
@@ -81,7 +80,7 @@ void *TakeOffsFunction() {
       sleep(1);
       pthread_mutex_unlock(&runway1_lock);
 
-    } else if (pthread_mutex_trylock(&runway2_lock) == 0 && planes > 0) {
+    } else if (pthread_mutex_trylock(&runway2_lock) == 0) {
       
       pthread_mutex_lock(&state_lock);
       planes -= 1;
