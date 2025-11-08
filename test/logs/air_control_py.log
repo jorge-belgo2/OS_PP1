@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "/Users/ivxn/Desktop/OS_PP1/test/../air_control_py/main.py", line 200, in <module>
+    main()
+  File "/Users/ivxn/Desktop/OS_PP1/test/../air_control_py/main.py", line 178, in main
+    radio_process = launch_radio()
+  File "/Users/ivxn/Desktop/OS_PP1/test/../air_control_py/main.py", line 161, in launch_radio
+    process = subprocess.Popen(['./radio',SH_MEMORY_NAME],preexec_fn=_unblock_sigusr2)
+  File "/Library/Frameworks/Python.framework/Versions/3.9/lib/python3.9/subprocess.py", line 951, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+  File "/Library/Frameworks/Python.framework/Versions/3.9/lib/python3.9/subprocess.py", line 1821, in _execute_child
+    raise child_exception_type(errno_num, err_msg, err_filename)
+OSError: [Errno 8] Exec format error: './radio'

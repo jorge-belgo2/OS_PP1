@@ -1,3 +1,3 @@
-/home/jorge_belgo/CIIC4050/PP1/ground_control/build/CMakeFiles/ground.dir
-/home/jorge_belgo/CIIC4050/PP1/ground_control/build/CMakeFiles/edit_cache.dir
-/home/jorge_belgo/CIIC4050/PP1/ground_control/build/CMakeFiles/rebuild_cache.dir
+/Users/ivxn/Desktop/OS_PP1/ground_control/build/CMakeFiles/ground.dir
+/Users/ivxn/Desktop/OS_PP1/ground_control/build/CMakeFiles/edit_cache.dir
+/Users/ivxn/Desktop/OS_PP1/ground_control/build/CMakeFiles/rebuild_cache.dir

@@ -16,7 +16,7 @@ runway1_lock = threading.Lock()
 runway2_lock = threading.Lock()
 state_lock   = threading.Lock()
 
-SH_MEMORY_NAME = "Shared_Memory_Segment"
+SH_MEMORY_NAME = "/Shared_Memory_Segment"
 # TODO1: Size of shared memory for 3 integers (current process pid, radio, ground) use ctypes.sizeof()
 # SHM_LENGTH=
 SHM_LENGTH = ctypes.sizeof(ctypes.c_int)*3 #sets size to 3 int
@@ -171,6 +171,8 @@ def main():
     fd, memory, data =  create_shared_memory()
     shm_data = data
     shm_data[0] = os.getpid()
+    shm_data[1] = 0  # placeholder for radio pid
+    shm_data[2] = 0  # could be ground or other process
     
     # TODO 7: Run radio and store its PID in shared memory, use the launch_radio function
     radio_process = launch_radio()

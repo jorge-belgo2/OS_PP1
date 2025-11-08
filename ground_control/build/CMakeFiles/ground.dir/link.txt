@@ -1,1 +1,1 @@
-/usr/bin/cc CMakeFiles/ground.dir/src/main.c.o CMakeFiles/ground.dir/src/functions.c.o -o ground  -lm 
+/usr/bin/cc -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/ground.dir/src/main.c.o CMakeFiles/ground.dir/src/functions.c.o -o ground  -lm
